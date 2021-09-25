@@ -266,6 +266,7 @@ namespace BlazorConnect4.Model
 
                 return Play(move);
             }
+            
 
             return false;
         }
