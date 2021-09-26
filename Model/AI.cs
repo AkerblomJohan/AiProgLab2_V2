@@ -3,7 +3,7 @@ using System.IO;
 using BlazorConnect4.Model;
 using System.Threading.Tasks;
 using System.Collections.Generic;
-
+using System.Threading;
 namespace BlazorConnect4.AIModels
 {
     [Serializable]
@@ -65,13 +65,28 @@ namespace BlazorConnect4.AIModels
     
     public class QLearn : AI
     {
+        public enum Reward
+        {
+            InPlay = 0,
+            redWin = -1,
+            yellowWin = 1,
+            Draw = 0
+           
+        }
+        public struct Move
+        {
+            public int Index;
+            public Reward MoveResult;
+        }
 
+        private GameBoard board;
         private double learningRate;
         private double discount;
         private int[][] qTable;
         private double Qvalue;
         private double epsilon = 0;
         double reward = 0;
+        
 
         Random rnd = new Random();
 
@@ -132,6 +147,7 @@ namespace BlazorConnect4.AIModels
                 if (FT[s, i].Color == CellColor.Blank) Result.Add(i);
             }
             return Result;
+            
         }
         //
         public int GetRandSate(int s, Cell[,] FT)
@@ -169,6 +185,68 @@ namespace BlazorConnect4.AIModels
                 }
             }
         }
+
+        public void Train2(int max, bool isRedFirst, IProgress<int> progress, CancellationToken ct)
+        {
+            int maxGames = max;
+            int[] states = new int[2];
+            int[] Players = isRedFirst ? new int[] { (int)CellColor.Red, (int)CellColor.Yellow } : new int[] {(int)CellColor.Red, (int)CellColor.Yellow };
+            int totalMoves = 0;
+            int totalGames = 0;
+            Move move;
+
+            while (totalGames < maxGames)
+            {
+                move.MoveResult = Reward.InPlay;
+                move.Index = -1;
+                int moveNumber = 0;
+                int currentState = 0;
+                int newState = 0;
+                //board.Reset();
+                while (move.MoveResult == Reward.InPlay)
+                {
+                    int player = Players[moveNumber % 2];
+                    move = player == (int)CellColor.Yellow ? RandMoveRed() : RandMoveYellow(currentState);
+                 //   board[move.Index].Content = player;
+            
+                    if (move.MoveResult == 0)
+                    {
+                        move.MoveResult = Reward.Draw;
+                    }
+                    states[0] = currentState;
+                    states[1] = newState;
+                 
+                    currentState = newState;
+                    moveNumber++;
+                }
+                totalMoves += moveNumber - 1;
+                totalGames += 1;
+                if (totalGames == 0)
+                {
+                    progress.Report(totalGames / maxGames);
+                    ct.ThrowIfCancellationRequested();
+                }
+            }
+        }
+        private Move RandMoveYellow(int currentState)
+        {
+          
+            Move move;
+         
+
+            return move;
+        }
+        private Move RandMoveRed()
+        {
+         
+            Move move;
+         
+
+            return move;
+        }
+
+
+
 
 
         private void RedQLearning(Cell[,] board)
