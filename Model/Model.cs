@@ -97,7 +97,8 @@ namespace BlazorConnect4.Model
             }
             else if (playAgainst == "Q3")
             {
-                ai = new RandomAI();
+               var x = new QLearn();
+                x.playGames(Board.Grid);
             }
 
         }
@@ -124,13 +125,42 @@ namespace BlazorConnect4.Model
         }
 
 
-        public bool IsWin(int col, int row)
+        public bool IsWin(int col, int row, CellColor color)
         {
             bool win = false;
             int score = 0;
-            
 
-            // Check down
+            for (int i = 0; i < 7; i++)
+            {
+                for (int j = 0; j < 6; j++)
+                {
+                    if (Board.Grid[i, j].Color == color)
+                        score++;
+                    else score = 0;
+                    if (score == 4)
+                        win = true;
+                    
+
+                }
+                score = 0;
+            }
+            for (int i = 0; i < 6; i++)
+            {
+                for (int j = 0; j < 7; j++)
+                {
+                    if (Board.Grid[j, i].Color == color)
+                        score++;
+                    else score = 0;
+                    
+                    if (score == 4)
+                        win = true;
+                }
+                score = 0;
+            }
+
+
+
+                        // Check down
             if (row < 3)
             {
                 for (int i = row; i <= row + 3; i++)
@@ -220,19 +250,19 @@ namespace BlazorConnect4.Model
                     {
                         Board.Grid[col, i].Color = Player;
 
-                        if (IsWin(col,i))
+                        if (IsWin(col,i,Player))
                         {
                             message = Player.ToString() + " Wins";
                             active = false;
                             return true;
                         }
 
-                        if (IsDraw())
+                       /* if (IsDraw())
                         {
                             message = "Draw";
                             active = false;
                             return true;
-                        }
+                        }*/
                         break;
                     }
                 }
@@ -255,7 +285,7 @@ namespace BlazorConnect4.Model
                 Player = CellColor.Red;
             }
 
-            if (ai != null && Player == CellColor.Yellow)
+           /* if (ai != null && Player == CellColor.Yellow)
             {
                 int move = ai.SelectMove(Board.Grid);
 
@@ -267,7 +297,7 @@ namespace BlazorConnect4.Model
                 return Play(move);
             }
             
-
+            */
             return false;
         }
     }
