@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using BlazorConnect4.AIModels;
 
@@ -23,7 +24,7 @@ namespace BlazorConnect4.Model
 
     }
 
-    public class GameBoard
+    public class GameBoard : IEquatable<GameBoard>
     {
         public Cell[,] Grid { get; set; }
 
@@ -41,10 +42,32 @@ namespace BlazorConnect4.Model
             }
         }
 
+        public override bool Equals(object obj)
+        {
+            return Equals(obj as GameBoard);
+        }
+
+        public bool Equals(GameBoard other)
+        {
+            return other != null &&
+                   EqualityComparer<Cell[,]>.Default.Equals(Grid, other.Grid);
+        }
+
+        public static String HashCodeToString(Cell[,] grid) //set the grid to a strig
+        {
+            var hash = new System.Text.StringBuilder();
+            for (int i = 0; i <= 6; i++)
+            {
+                for (int j = 0; j <= 5; j++)
+                {
+                    hash.Append(grid[i, j]);
+                }
+            }
+            Console.WriteLine("Hash is :",hash.ToString());
+            return hash.ToString();
+        }
 
     }
-
-
     public class GameEngine
     {
         public GameBoard Board { get; set; }

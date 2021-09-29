@@ -80,12 +80,32 @@ namespace BlazorConnect4.AIModels
             public Reward MoveResult;
         }
 
-        
 
+       
+        public Dictionary<String, double[]> getQDict;
 
         private double learningRate = 5;
         private double discount = 5;
 
+        public int GetBestAction(Cell[,] state)
+        {
+            String key = GameBoard.HashCodeToString(state);
+            
+            getQDict = new Dictionary<String, double[]>();
+            Console.WriteLine("Dic : ",getQDict);
+            int action = 0;
+            double value = getQDict[key][0];
+            for (int i = 1; i < 7; i++)
+            {
+                if (getQDict[key][i] > value)
+                {
+                    action = i;
+                    value = getQDict[key][i];
+                    Console.WriteLine("key is : ", value);
+                }
+            }
+            return action;
+        }
 
         public int[,] getBoard(Cell[,] grid)
         {
@@ -108,13 +128,8 @@ namespace BlazorConnect4.AIModels
         public void playGames(Cell[,] grid)
         {
             var randomAI = new RandomAI();
-            
-            
-            Move move;
-            
-            
-            
-            for (int i = 0; i < 10000; i++)
+            Move move;  
+            for (int i = 0; i < 1; i++)
             {
                 move.MoveResult = Reward.InPlay;
                 GameBoard board = new GameBoard();
@@ -123,6 +138,8 @@ namespace BlazorConnect4.AIModels
 
                 while (move.MoveResult == Reward.InPlay)
                 {
+                    
+                    Console.WriteLine(grid);
                     if(gameEngine.IsDraw())
                     {
                         Console.WriteLine("draw");
@@ -131,11 +148,19 @@ namespace BlazorConnect4.AIModels
                     }
                     else if (gameEngine.Player == CellColor.Red)
                     {
+                        var test = GetBestAction(board.Grid);
+                        Console.WriteLine("best action:", test);
                         if (gameEngine.Play(randomAI.SelectMove(board.Grid)))
                         {
+                            getBoard(gameEngine.Board.Grid);
                             move.MoveResult = Reward.Win;
+                           // Console.WriteLine(getBoard(board, grid));
                             Console.WriteLine("win");
+
                         }
+                     
+                           
+                        
                     }
                     else if (gameEngine.Player == CellColor.Yellow)
                     {
