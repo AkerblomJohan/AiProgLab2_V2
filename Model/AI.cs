@@ -66,11 +66,12 @@ namespace BlazorConnect4.AIModels
     
     public class QLearn : AI
     {
-        public enum Reward
+        public enum Reward : int
         {
             InPlay = 0,
-            Loss = -1,
-            Win = 1,
+            Loss = -10,
+            Win = 10,
+            IsValid = -1,
             Draw = 5
            
         }
@@ -80,11 +81,12 @@ namespace BlazorConnect4.AIModels
             public Reward MoveResult;
         }
 
+        public double[,] qTable = new double[10,10];
         
 
 
-        private double learningRate = 5;
-        private double discount = 5;
+        private double learningRate = 0.5;
+        private double discount = 0.5;
 
 
         public int[,] getBoard(Cell[,] grid)
@@ -100,44 +102,107 @@ namespace BlazorConnect4.AIModels
                         temp[i, j] = 2;
                     if (grid[i, j].Color == CellColor.Blank)
                         temp[i, j] = 0;
+                    Console.Write(temp[i, j]);
                 }
+                Console.WriteLine();
             }
             return temp;
+        }
+        public void printBoard(double[,] grid)
+        {         
+            for (int i = 0; i < 7; i++)
+            {
+                for (int j = 0; j < 6; j++)
+                {    
+                    Console.Write(grid[i, j].ToString("F3") + " ");
+                }
+                Console.WriteLine();
+            }
+            
+        }
+        public double maxMove(Cell[,] grid, GameEngine engine)
+        {
+            double q = 0;
+
+            Cell[,] temp = grid;
+            GameEngine tempEninge = engine;
+
+            for (int i = 0; i < 7; i++)
+            {
+                
+                tempEninge.Play(temp,i, CellColor.Yellow);
+                for (int j = 0; j < 7; j++)
+                {
+                    if (qTable[i, j] > q)
+                        q = qTable[i, j]; 
+                    
+                }
+               temp = grid;
+            }
+
+            return q;
+        }
+        
+        public int findRow(Cell[,] grid, int col)
+        {
+            for (int i = 5; i >= 0; i--)
+            {
+                if (grid[col, i].Color == CellColor.Blank)
+                {
+                    return i+1;
+                }   
+            }
+
+            return 0;
         }
         
         public void playGames(Cell[,] grid)
         {
             var randomAI = new RandomAI();
-            
-            
+            printBoard(qTable);
             Move move;
-            
-            
-            
-            for (int i = 0; i < 10000; i++)
+            int col = 0;
+            int row = 0;
+            for (int i = 0; i < 5000; i++)
             {
                 move.MoveResult = Reward.InPlay;
                 GameBoard board = new GameBoard();
                 GameEngine gameEngine = new GameEngine();
                 Console.WriteLine(i);
+                
 
                 while (move.MoveResult == Reward.InPlay)
                 {
-                    if(gameEngine.IsDraw())
+                    if (gameEngine.IsDraw())
                     {
                         Console.WriteLine("draw");
                         move.MoveResult = Reward.Draw;
-                        
+
                     }
                     else if (gameEngine.Player == CellColor.Red)
                     {
-                        if (gameEngine.Play(randomAI.SelectMove(board.Grid)))
+
+                        if (gameEngine.Play(col = randomAI.SelectMove(board.Grid)))
                         {
+                            
                             move.MoveResult = Reward.Win;
                             Console.WriteLine("win");
+
                         }
+                        else { 
+                            row = findRow(board.Grid, col);
+                            qTable[col, row] = qTable[col, row] + learningRate * (-0.1 + discount * maxMove(board.Grid, gameEngine) - qTable[col, row]);
+                            continue;
+                        }
+
+                        row = findRow(board.Grid, col);
+                        qTable[col, row] = qTable[col, row] + learningRate * ((int)move.MoveResult/10 + discount * maxMove(board.Grid, gameEngine) - qTable[col, row]);
+            //_matrix[cur_pos][action] = q_matrix[cur_pos][action] + learning_rate * (environment_matrix[cur_pos][action] + 
+           // discount * max(q_matrix[next_state]) - q_matrix[cur_pos][action])
                     }
-                    else if (gameEngine.Player == CellColor.Yellow)
+                    
+
+                    else if(gameEngine.Player == CellColor.Yellow)
                     {
                         if (gameEngine.Play(randomAI.SelectMove(board.Grid)))
                         {
@@ -146,13 +211,16 @@ namespace BlazorConnect4.AIModels
                         }
 
                     }
+                    
+
                 }
                
             }
 
+
+            printBoard(qTable);
         }
-        
-      
+
         
         public override int SelectMove(Cell[,] grid)
         {

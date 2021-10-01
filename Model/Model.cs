@@ -130,35 +130,6 @@ namespace BlazorConnect4.Model
             bool win = false;
             int score = 0;
 
-            for (int i = 0; i < 7; i++)
-            {
-                for (int j = 0; j < 6; j++)
-                {
-                    if (Board.Grid[i, j].Color == color)
-                        score++;
-                    else score = 0;
-                    if (score == 4)
-                        win = true;
-                    
-
-                }
-                score = 0;
-            }
-            for (int i = 0; i < 6; i++)
-            {
-                for (int j = 0; j < 7; j++)
-                {
-                    if (Board.Grid[j, i].Color == color)
-                        score++;
-                    else score = 0;
-                    
-                    if (score == 4)
-                        win = true;
-                }
-                score = 0;
-            }
-
-
 
                         // Check down
             if (row < 3)
@@ -269,6 +240,23 @@ namespace BlazorConnect4.Model
                 return PlayNext();
             }
 
+            return false;
+        }
+
+        public bool Play(Cell[,] tempGrid, int col, CellColor color)
+        {
+            if (tempGrid[col, 0].Color == CellColor.Blank)
+            {
+
+                for (int i = 5; i >= 0; i--)
+                {
+                    if (tempGrid[col, i].Color == CellColor.Blank)
+                    {
+                        tempGrid[col, i].Color = color;
+                        break;
+                    }
+                }
+            }
             return false;
         }
 
