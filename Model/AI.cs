@@ -63,7 +63,7 @@ namespace BlazorConnect4.AIModels
         }
     }
 
-
+    [Serializable]
     public class QLearn : AI
     {
         public enum Reward : int
@@ -202,10 +202,15 @@ namespace BlazorConnect4.AIModels
             return grid[col, 0].Color == CellColor.Blank;
             
         }
-        
-       
-        
-        
+
+        public static QLearn ConstructFromFile(string fileName)
+        {
+            QLearn temp = (QLearn)(AI.FromFile(fileName));
+          
+            return temp;
+        }
+
+
 
         public double qValueNextState(Cell[,] grid, GameEngine engine)
         {
@@ -229,7 +234,7 @@ namespace BlazorConnect4.AIModels
             int col = 0;
             int row = 0;
             int action = 0;
-            for (int i = 0; i < 10000; i++)
+            for (int i = 0; i < 50000; i++)
             {
                 move.MoveResult = Reward.InPlay;
                 GameBoard board = new GameBoard();
@@ -285,6 +290,7 @@ namespace BlazorConnect4.AIModels
                
             }
 
+            
         }
     }
 }

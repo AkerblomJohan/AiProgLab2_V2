@@ -117,12 +117,13 @@ namespace BlazorConnect4.Model
             }
             else if (playAgainst == "Q2")
             {
-                ai = new RandomAI();
+                ai = QLearn.ConstructFromFile("Data/QLearn.bin");
             }
             else if (playAgainst == "Q3")
             {
-               var x = new QLearn();
+                var x = new QLearn();
                 x.playGames();
+                x.ToFile("Data/QLearn.bin"); ;
             }
 
         }
