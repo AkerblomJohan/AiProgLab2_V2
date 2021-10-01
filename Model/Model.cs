@@ -55,15 +55,16 @@ namespace BlazorConnect4.Model
 
         public static String HashCodeToString(Cell[,] grid) //set the grid to a strig
         {
-            var hash = new System.Text.StringBuilder();
+            System.Text.StringBuilder hash = new System.Text.StringBuilder();
+  
             for (int i = 0; i <= 6; i++)
             {
                 for (int j = 0; j <= 5; j++)
                 {
-                    hash.Append(grid[i, j]);
+                    hash.Append((int)grid[i, j].Color);
                 }
             }
-            Console.WriteLine("Hash is :",hash.ToString());
+            
             return hash.ToString();
         }
 
@@ -129,7 +130,7 @@ namespace BlazorConnect4.Model
 
 
 
-        private bool IsValid(int col)
+        public bool IsValid(int col)
         {
             return Board.Grid[col, 0].Color == CellColor.Blank;
         }
@@ -282,6 +283,7 @@ namespace BlazorConnect4.Model
             }
             return false;
         }
+
 
 
         private bool PlayNext()

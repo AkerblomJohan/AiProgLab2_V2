@@ -63,7 +63,7 @@ namespace BlazorConnect4.AIModels
         }
     }
 
-    
+
     public class QLearn : AI
     {
         public enum Reward : int
@@ -73,7 +73,7 @@ namespace BlazorConnect4.AIModels
             Win = 10,
             IsValid = -1,
             Draw = 5
-           
+
         }
         public struct Move
         {
@@ -82,85 +82,129 @@ namespace BlazorConnect4.AIModels
         }
 
 
-       
-        public Dictionary<String, double[]> getQDict;
+
+        public Dictionary<String, double[]> QDict;
 
         private double learningRate = 0.5;
         private double discount = 0.5;
+        private double epsion = 0.1;
+        public double[,] qTable = new double[10, 10];
 
-        public int GetBestAction(Cell[,] state)
+
+        public QLearn()
         {
-            String key = GameBoard.HashCodeToString(state);
-            
-            getQDict = new Dictionary<String, double[]>();
-            Console.WriteLine("Dic : ",getQDict);
-            int action = 0;
-            double value = getQDict[key][0];
-            for (int i = 1; i < 7; i++)
+            QDict = new Dictionary<String, double[]>();
+        }
+
+       
+        public override int SelectMove(Cell[,] grid)
+        {
+            int action = greedyAction(grid);
+            Random rnd = new Random();
+
+            while (!isValid(grid,action))
             {
-                if (getQDict[key][i] > value)
-                {
-                    action = i;
-                    value = getQDict[key][i];
-                    Console.WriteLine("key is : ", value);
-                }
+                action = rnd.Next(0, 7);
             }
             return action;
         }
 
-        public int[,] getBoard(Cell[,] grid)
+        public double getQ(Cell[,] grid, int action)
         {
-            int[,] temp = new int[7,6];
-            for (int i = 0; i < 7; i++)
+            Random rnd = new Random();
+            String key = GameBoard.HashCodeToString(grid);
+            if (QDict.ContainsKey(key))
             {
-                for (int j = 0; j < 6; j++)
+                return QDict[key][action];
+            }
+            else
+            {
+                double[] rndActions = new double[7];
+                for (int i = 0; i < 7; i++)
                 {
-                    if (grid[i, j].Color == CellColor.Red)
-                        temp[i, j] = 1;
-                    if (grid[i, j].Color == CellColor.Yellow)
-                        temp[i, j] = 2;
-                    if (grid[i, j].Color == CellColor.Blank)
-                        temp[i, j] = 0;
-                    Console.Write(temp[i, j]);
+
+                    rndActions[i] = rnd.NextDouble();
                 }
-                Console.WriteLine();
+                QDict.Add(key, rndActions);
             }
-            return temp;
+            return 0;
+
         }
-        public void printBoard(double[,] grid)
-        {         
+
+        public void updateQ(Cell[,] grid, int action, double qValue)
+        {
+            Random rnd = new Random();
+            String key = GameBoard.HashCodeToString(grid);
+            if (!QDict.ContainsKey(key))
+            {
+                double[] rndActions = new double[7];
+                for (int i = 0; i < 7; i++)
+                {
+
+                    rndActions[i] = rnd.NextDouble();
+                }
+                QDict.Add(key, rndActions);
+            }
+            QDict[key][action] = qValue;
+        }
+
+        public int greedyAction(Cell[,] grid)
+        {
+
+            Random rnd = new Random();
+            int action = rnd.Next(0, 7);
+            if (rnd.NextDouble() < epsion)
+            {
+
+                while (grid[action, 0].Color != CellColor.Blank)
+                {
+                    action = rnd.Next(0, 7);
+                }
+
+            }
+            else
+            {
+                action = maxMove(grid);
+                while (grid[action, 0].Color != CellColor.Blank)
+                {
+                    action = rnd.Next(0, 7);
+                }
+
+            }
+            return action;
+        }
+        public int maxMove(Cell[,] grid)
+        {
+            int action = 0;
+            Random rnd = new Random();
+            double qValue = getQ(grid, action);
+
             for (int i = 0; i < 7; i++)
             {
-                for (int j = 0; j < 6; j++)
-                {    
-                    Console.Write(grid[i, j].ToString("F3") + " ");
+                if (getQ(grid, i) > qValue)
+                {
+                    action = i;
+                    qValue = getQ(grid, i);
                 }
-                Console.WriteLine();
             }
+
+
+            bool validMove = isValid(grid, action);
+            while(!validMove)
+            {
+                action = rnd.Next(0, 7);
+                validMove = isValid(grid, action);
+            }
+            return action;
+        }
+        public bool isValid(Cell[,] grid, int col)
+        {
+            return grid[col, 0].Color == CellColor.Blank;
             
         }
-        public double maxMove(Cell[,] grid, GameEngine engine)
-        {
-            double q = 0;
-
-            Cell[,] temp = grid;
-            GameEngine tempEninge = engine;
-
-            for (int i = 0; i < 7; i++)
-            {
-                
-                tempEninge.Play(temp,i, CellColor.Yellow);
-                for (int j = 0; j < 7; j++)
-                {
-                    if (qTable[i, j] > q)
-                        q = qTable[i, j]; 
-                    
-                }
-               temp = grid;
-            }
-
-            return q;
-        }
+        
+       
+        
         
         public int findRow(Cell[,] grid, int col)
         {
@@ -178,11 +222,11 @@ namespace BlazorConnect4.AIModels
         public void playGames(Cell[,] grid)
         {
             var randomAI = new RandomAI();
-            printBoard(qTable);
+            //printBoard(qTable);
             Move move;
             int col = 0;
             int row = 0;
-            for (int i = 0; i < 5000; i++)
+            for (int i = 0; i < 1000; i++)
             {
                 move.MoveResult = Reward.InPlay;
                 GameBoard board = new GameBoard();
@@ -196,15 +240,16 @@ namespace BlazorConnect4.AIModels
                     {
                         Console.WriteLine("draw");
                         move.MoveResult = Reward.Draw;
-
+                        updateQ(board.Grid, 5, 0.5);
                     }
                     else if (gameEngine.Player == CellColor.Red)
                     {
-                        var test = GetBestAction(board.Grid);
+                        var test = getQ(board.Grid, 5);
                         Console.WriteLine("best action:", test);
                         if (gameEngine.Play(randomAI.SelectMove(board.Grid)))
                         {
-                            getBoard(gameEngine.Board.Grid);
+                            updateQ(board.Grid, 5, 1);
+                            //getBoard(gameEngine.Board.Grid);
                             move.MoveResult = Reward.Win;
                            // Console.WriteLine(getBoard(board, grid));
                             Console.WriteLine("win");
@@ -212,12 +257,12 @@ namespace BlazorConnect4.AIModels
                         }
                         else { 
                             row = findRow(board.Grid, col);
-                            qTable[col, row] = qTable[col, row] + learningRate * (-0.1 + discount * maxMove(board.Grid, gameEngine) - qTable[col, row]);
+                            //qTable[col, row] = qTable[col, row] + learningRate * (-0.1 + discount * maxMove(board.Grid, gameEngine) - qTable[col, row]);
                             continue;
                         }
 
                         row = findRow(board.Grid, col);
-                        qTable[col, row] = qTable[col, row] + learningRate * ((int)move.MoveResult/10 + discount * maxMove(board.Grid, gameEngine) - qTable[col, row]);
+                       // qTable[col, row] = qTable[col, row] + learningRate * ((int)move.MoveResult/10 + discount * maxMove(board.Grid, gameEngine) - qTable[col, row]);
             //_matrix[cur_pos][action] = q_matrix[cur_pos][action] + learning_rate * (environment_matrix[cur_pos][action] + 
            // discount * max(q_matrix[next_state]) - q_matrix[cur_pos][action])
                     }
@@ -227,6 +272,7 @@ namespace BlazorConnect4.AIModels
                     {
                         if (gameEngine.Play(randomAI.SelectMove(board.Grid)))
                         {
+                            updateQ(board.Grid, 5, -1);
                             move.MoveResult = Reward.Loss;
                             Console.WriteLine("loss");
                         }
@@ -239,7 +285,7 @@ namespace BlazorConnect4.AIModels
             }
 
 
-            printBoard(qTable);
+            //printBoard(qTable);
         }
 
         
