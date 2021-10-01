@@ -87,9 +87,8 @@ namespace BlazorConnect4.AIModels
 
         private double alpha = 0.5; //  alpha?
         private double gamma = 0.9; // gamma?
-        private double epsion = 0.1;
-        public double[,] qTable = new double[10, 10];
-
+        private double epsion = 0.9;
+       
 
         public QLearn()
         {
@@ -222,38 +221,47 @@ namespace BlazorConnect4.AIModels
             while (!isValid(grid, action))
                 action = rnd.Next(0, 7);
 
-            int bestAction = greedyAction(copyGrid);
+            if (engine.Play(grid, action, CellColor.Yellow))
+            {
+
+                int bestAction = greedyAction(copyGrid);
+                return getQ(copyGrid, bestAction);
+            }
 
 
-            return getQ(copyGrid, bestAction);
+
+            return 0;
+            
         }
         public void playGames()
         {
             var randomAI = new RandomAI();
             Move move;
-            int col = 0;
-            int row = 0;
-            int action = 0;
-            for (int i = 0; i < 50000; i++)
+ 
+            int action;
+            int wins = 0;
+            int loss = 0;
+            int draw = 0;
+            for (int i = 0; i < 1000; i++)
             {
                 move.MoveResult = Reward.InPlay;
                 GameBoard board = new GameBoard();
                 GameEngine gameEngine = new GameEngine();
-                
-                
+                Console.WriteLine(i);
 
+                action = greedyAction(board.Grid);
                 while (move.MoveResult == Reward.InPlay)
                 {
                     if (gameEngine.IsDraw())
                     {
-                        Console.WriteLine("draw");
+                        
                         move.MoveResult = Reward.Draw;
+                        draw++;
                         updateQ(board.Grid, action, 0.5);
+                        
                     }
-                    else if (gameEngine.Player == CellColor.Red)
+                    if (gameEngine.Player == CellColor.Red)
                     {
-                        action = greedyAction(board.Grid);
-                        double qValue = getQ(board.Grid, action);
                         
                         
                         if (gameEngine.Play(action))
@@ -262,26 +270,27 @@ namespace BlazorConnect4.AIModels
                            
                             move.MoveResult = Reward.Win;
                            
-                            Console.WriteLine("win");
-
+                           
+                            wins++;
 
                         }
-                        else
-                        {
-                            double qValueNext = qValueNextState(board.Grid,gameEngine);
-                            updateQ(board.Grid, action, (qValue + alpha * (gamma * qValueNext - qValue)));
-                        }
-                       
 
-                  
+                       double qValue = getQ(board.Grid, action);
+                       double qValueNext = qValueNextState(board.Grid,gameEngine);
+                       updateQ(board.Grid, action, (qValue + alpha * (gamma * qValueNext - qValue)));
+                        
+                        action = greedyAction(board.Grid);
+                        
+
                     }
-                    else if(gameEngine.Player == CellColor.Yellow)
+                    if(gameEngine.Player == CellColor.Yellow)
                     {
                         if (gameEngine.Play(randomAI.SelectMove(board.Grid)))
                         {
                             updateQ(board.Grid, action, -1);
                             move.MoveResult = Reward.Loss;
-                            Console.WriteLine("loss");
+                           
+                            loss++;
                         }
 
                     }
@@ -290,7 +299,12 @@ namespace BlazorConnect4.AIModels
                
             }
 
-            
+            Console.WriteLine("wins " + wins);
+
+            Console.WriteLine("loss " + loss);
+
+            Console.WriteLine("draw " + draw);
         }
+        
     }
 }
