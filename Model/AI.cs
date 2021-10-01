@@ -81,13 +81,32 @@ namespace BlazorConnect4.AIModels
             public Reward MoveResult;
         }
 
-        public double[,] qTable = new double[10,10];
-        
 
+       
+        public Dictionary<String, double[]> getQDict;
 
         private double learningRate = 0.5;
         private double discount = 0.5;
 
+        public int GetBestAction(Cell[,] state)
+        {
+            String key = GameBoard.HashCodeToString(state);
+            
+            getQDict = new Dictionary<String, double[]>();
+            Console.WriteLine("Dic : ",getQDict);
+            int action = 0;
+            double value = getQDict[key][0];
+            for (int i = 1; i < 7; i++)
+            {
+                if (getQDict[key][i] > value)
+                {
+                    action = i;
+                    value = getQDict[key][i];
+                    Console.WriteLine("key is : ", value);
+                }
+            }
+            return action;
+        }
 
         public int[,] getBoard(Cell[,] grid)
         {
@@ -181,11 +200,13 @@ namespace BlazorConnect4.AIModels
                     }
                     else if (gameEngine.Player == CellColor.Red)
                     {
-
-                        if (gameEngine.Play(col = randomAI.SelectMove(board.Grid)))
+                        var test = GetBestAction(board.Grid);
+                        Console.WriteLine("best action:", test);
+                        if (gameEngine.Play(randomAI.SelectMove(board.Grid)))
                         {
-                            
+                            getBoard(gameEngine.Board.Grid);
                             move.MoveResult = Reward.Win;
+                           // Console.WriteLine(getBoard(board, grid));
                             Console.WriteLine("win");
 
                         }
