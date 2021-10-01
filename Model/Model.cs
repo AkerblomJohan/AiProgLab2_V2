@@ -122,7 +122,7 @@ namespace BlazorConnect4.Model
             else if (playAgainst == "Q3")
             {
                var x = new QLearn();
-                x.playGames(Board.Grid);
+                x.playGames();
             }
 
         }
@@ -298,7 +298,7 @@ namespace BlazorConnect4.Model
                 Player = CellColor.Red;
             }
 
-           /* if (ai != null && Player == CellColor.Yellow)
+            if (ai != null && Player == CellColor.Yellow)
             {
                 int move = ai.SelectMove(Board.Grid);
 
@@ -310,7 +310,7 @@ namespace BlazorConnect4.Model
                 return Play(move);
             }
             
-            */
+            
             return false;
         }
     }
