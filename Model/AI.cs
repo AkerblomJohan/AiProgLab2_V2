@@ -225,12 +225,23 @@ namespace BlazorConnect4.AIModels
             }
             return true;
         }
+        private CellColor otherColor(CellColor color)
+        {
+            if (color == CellColor.Red)
+            {
+                return CellColor.Yellow;
+            }
+            else
+            {
+                return CellColor.Red;
+            }
+        }
 
-        public double qValueNextState(Cell[,] grid, GameEngine engine)
+        public double qValueNextState(Cell[,] grid, GameEngine engine, CellColor color)
         {
 
             Cell[,] copy = engine.copyBoard(grid);
-
+            
             Random rnd = new Random();
             int action = rnd.Next(0, 7);
             if (!engine.IsDraw())
@@ -238,8 +249,8 @@ namespace BlazorConnect4.AIModels
                 
                 while (!isValid(copy, action))
                     action = rnd.Next(0, 7);
-          
-                engine.Play(copy, action, CellColor.Yellow);
+                
+                engine.Play(copy, action, otherColor(color));
                 
                 if (!IsDraw(copy))
                 {
@@ -250,8 +261,8 @@ namespace BlazorConnect4.AIModels
                 }
                
             }
-           
-            return 0;
+
+            return getQ(copy, action);
 
         }
 
@@ -287,7 +298,7 @@ namespace BlazorConnect4.AIModels
 
         }
 
-        public void playGames()
+        public void playGames(CellColor colorToTrain)
         {
             var randomAI = new RandomAI();
             Move move;
@@ -296,7 +307,7 @@ namespace BlazorConnect4.AIModels
             int wins = 0;
             int loss = 0;
             int draw = 0;
-            for (int i = 0; i < 50000; i++)
+            for (int i = 0; i < 500; i++)
             {
                 move.MoveResult = Reward.InPlay;
                 
@@ -314,12 +325,12 @@ namespace BlazorConnect4.AIModels
                         updateQ(gameEngine.Board.Grid, action, 0.5);
                         
                     }
-                    else if (gameEngine.Player == CellColor.Red)
+                    else if (gameEngine.Player == colorToTrain)
                     {
                         
                         double qValue = getQ(gameEngine.Board.Grid, action);
                        
-                        double qValueNext = qValueNextState(gameEngine.Board.Grid, gameEngine);
+                        double qValueNext = qValueNextState(gameEngine.Board.Grid, gameEngine, colorToTrain);
                        
                         updateQ(gameEngine.Board.Grid, action, (qValue + alpha * (gamma * qValueNext - qValue)));
                        
@@ -336,7 +347,7 @@ namespace BlazorConnect4.AIModels
                         }
 
                     }
-                    else if(gameEngine.Player == CellColor.Yellow)
+                    else
                     {
                         
                         if (gameEngine.Play(randomAI.SelectMove(gameEngine.Board.Grid)))
@@ -350,7 +361,7 @@ namespace BlazorConnect4.AIModels
                     }
 
                 }
-                //printBoard(getBoard( gameEngine.Board.Grid));
+               // printBoard(getBoard( gameEngine.Board.Grid));
 
 
             }

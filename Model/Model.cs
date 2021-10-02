@@ -124,7 +124,7 @@ namespace BlazorConnect4.Model
             else if (playAgainst == "Q3")
             {
                 var x = new QLearn();
-                x.playGames();
+                x.playGames(CellColor.Red);
                 x.ToFile("Data/QLearn.bin"); ;
             }
 
