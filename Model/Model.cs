@@ -271,21 +271,44 @@ namespace BlazorConnect4.Model
             return false;
         }
 
-        public bool Play(Cell[,] tempGrid, int col, CellColor color)
+        public Cell[,] copyBoard(Cell[,] grid)
         {
-            if (tempGrid[col, 0].Color == CellColor.Blank)
+            Cell[,] temp = new Cell[7, 6];
+
+            for (int i = 0; i < 7; i++)
+            {
+                for (int j = 0; j < 6; j++)
+                {
+                    if (grid[i, j].Color == CellColor.Blank)
+                        temp[i, j] = new Cell(CellColor.Blank);
+                    if (grid[i, j].Color == CellColor.Red)
+                        temp[i, j] = new Cell(CellColor.Red);
+                    if (grid[i, j].Color == CellColor.Yellow)
+                        temp[i, j] = new Cell(CellColor.Yellow);
+
+                }
+
+            }
+            return temp;
+        }
+
+        public bool Play(Cell[,] grid, int col, CellColor color)
+        {
+            
+
+            if (grid[col, 0].Color == CellColor.Blank)
             {
 
                 for (int i = 5; i >= 0; i--)
                 {
-                    if (tempGrid[col, i].Color == CellColor.Blank)
+                    if (grid[col, i].Color == CellColor.Blank)
                     {
-                        tempGrid[col, i].Color = color;
-                        return true;
+                        grid[col, i].Color = color;
+                        return false;
                     }
                 }
             }
-            return false;
+            return true;
         }
 
 

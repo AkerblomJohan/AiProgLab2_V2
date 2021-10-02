@@ -209,31 +209,84 @@ namespace BlazorConnect4.AIModels
             return temp;
         }
 
+        private bool Play(Cell[,] grid, int action)
+        {
+            return true;
+        }
 
+        public bool IsDraw(Cell[,] grid)
+        {
+            for (int i = 0; i < 7; i++)
+            {
+                if (grid[i, 0].Color == CellColor.Blank)
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
 
         public double qValueNextState(Cell[,] grid, GameEngine engine)
         {
-            Cell[,] copyGrid = grid.Clone() as Cell[,];
 
-            
-           
+            Cell[,] copy = engine.copyBoard(grid);
+
             Random rnd = new Random();
             int action = rnd.Next(0, 7);
-            while (!isValid(grid, action))
-                action = rnd.Next(0, 7);
-
-            if (engine.Play(grid, action, CellColor.Yellow))
+            if (!engine.IsDraw())
             {
+                
+                while (!isValid(copy, action))
+                    action = rnd.Next(0, 7);
+          
+                engine.Play(copy, action, CellColor.Yellow);
+                
+                if (!IsDraw(copy))
+                {
+                    
+                    action = greedyAction(copy);
+                  
+                    return getQ(copy, action);
+                }
+               
+            }
+           
+            return 0;
 
-                int bestAction = greedyAction(copyGrid);
-                return getQ(copyGrid, bestAction);
+        }
+
+        public double[,] getBoard(Cell[,] grid)
+        {
+            double[,] temp = new double[7, 6];
+            for (int i = 0; i < 7; i++)
+            {
+                for (int j = 0; j < 6; j++)
+                {
+                    if (grid[i, j].Color == CellColor.Blank)
+                        temp[i, j] = 0;
+                    if (grid[i, j].Color == CellColor.Red)
+                        temp[i, j] = 1;
+                    if (grid[i, j].Color == CellColor.Yellow)
+                        temp[i, j] = 2;
+
+                }
+                
+            }
+            return temp;
+        }
+        public void printBoard(double[,] grid)
+        {
+            for (int i = 0; i < 7; i++)
+            {
+                for (int j = 0; j < 6; j++)
+                {
+                    Console.Write(grid[i, j]);//.ToString("F3") + " ");
+                }
+                Console.WriteLine();
             }
 
-
-
-            return 0;
-            
         }
+
         public void playGames()
         {
             var randomAI = new RandomAI();
@@ -243,10 +296,10 @@ namespace BlazorConnect4.AIModels
             int wins = 0;
             int loss = 0;
             int draw = 0;
-            for (int i = 0; i < 10000; i++)
+            for (int i = 0; i < 50000; i++)
             {
                 move.MoveResult = Reward.InPlay;
-                //GameBoard board = new GameBoard();
+                
                 GameEngine gameEngine = new GameEngine();
                 Console.WriteLine(i);
                 
@@ -263,12 +316,15 @@ namespace BlazorConnect4.AIModels
                     }
                     else if (gameEngine.Player == CellColor.Red)
                     {
+                        
                         double qValue = getQ(gameEngine.Board.Grid, action);
+                       
                         double qValueNext = qValueNextState(gameEngine.Board.Grid, gameEngine);
+                       
                         updateQ(gameEngine.Board.Grid, action, (qValue + alpha * (gamma * qValueNext - qValue)));
-                        
+                       
                         action = greedyAction(gameEngine.Board.Grid);
-                        
+                       
                         if (gameEngine.Play(action))
                         {
                             updateQ(gameEngine.Board.Grid, action, 1);
@@ -283,7 +339,7 @@ namespace BlazorConnect4.AIModels
                     else if(gameEngine.Player == CellColor.Yellow)
                     {
                         
-                            if (gameEngine.Play(randomAI.SelectMove(gameEngine.Board.Grid)))
+                        if (gameEngine.Play(randomAI.SelectMove(gameEngine.Board.Grid)))
                             {
                                 updateQ(gameEngine.Board.Grid, action, -1);
                                 move.MoveResult = Reward.Loss;
@@ -294,7 +350,9 @@ namespace BlazorConnect4.AIModels
                     }
 
                 }
-               
+                //printBoard(getBoard( gameEngine.Board.Grid));
+
+
             }
 
             Console.WriteLine("wins " + wins);
