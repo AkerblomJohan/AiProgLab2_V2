@@ -85,8 +85,8 @@ namespace BlazorConnect4.AIModels
 
         public Dictionary<String, double[]> QDict;
 
-        private double alpha = 0.5; //  alpha?
-        private double gamma = 0.9; // gamma?
+        private double alpha = 0.5; 
+        private double gamma = 0.9; 
         private double epsion = 0.9;
        
 
@@ -100,7 +100,7 @@ namespace BlazorConnect4.AIModels
         {
             int action = greedyAction(grid);
             Random rnd = new Random();
-
+            
             while (!isValid(grid,action))
             {
                 action = rnd.Next(0, 7);
@@ -214,7 +214,8 @@ namespace BlazorConnect4.AIModels
         public double qValueNextState(Cell[,] grid, GameEngine engine)
         {
             Cell[,] copyGrid = grid.Clone() as Cell[,];
-           
+
+            
            
             Random rnd = new Random();
             int action = rnd.Next(0, 7);
@@ -238,18 +239,18 @@ namespace BlazorConnect4.AIModels
             var randomAI = new RandomAI();
             Move move;
  
-            int action;
+            int action= 0;
             int wins = 0;
             int loss = 0;
             int draw = 0;
-            for (int i = 0; i < 1000; i++)
+            for (int i = 0; i < 10000; i++)
             {
                 move.MoveResult = Reward.InPlay;
-                GameBoard board = new GameBoard();
+                //GameBoard board = new GameBoard();
                 GameEngine gameEngine = new GameEngine();
                 Console.WriteLine(i);
-
-                action = greedyAction(board.Grid);
+                
+                
                 while (move.MoveResult == Reward.InPlay)
                 {
                     if (gameEngine.IsDraw())
@@ -257,41 +258,38 @@ namespace BlazorConnect4.AIModels
                         
                         move.MoveResult = Reward.Draw;
                         draw++;
-                        updateQ(board.Grid, action, 0.5);
+                        updateQ(gameEngine.Board.Grid, action, 0.5);
                         
                     }
-                    if (gameEngine.Player == CellColor.Red)
+                    else if (gameEngine.Player == CellColor.Red)
                     {
+                        double qValue = getQ(gameEngine.Board.Grid, action);
+                        double qValueNext = qValueNextState(gameEngine.Board.Grid, gameEngine);
+                        updateQ(gameEngine.Board.Grid, action, (qValue + alpha * (gamma * qValueNext - qValue)));
                         
+                        action = greedyAction(gameEngine.Board.Grid);
                         
                         if (gameEngine.Play(action))
                         {
-                            updateQ(board.Grid, action, 1);
+                            updateQ(gameEngine.Board.Grid, action, 1);
                            
                             move.MoveResult = Reward.Win;
-                           
-                           
+
                             wins++;
 
                         }
 
-                       double qValue = getQ(board.Grid, action);
-                       double qValueNext = qValueNextState(board.Grid,gameEngine);
-                       updateQ(board.Grid, action, (qValue + alpha * (gamma * qValueNext - qValue)));
-                        
-                        action = greedyAction(board.Grid);
-                        
-
                     }
-                    if(gameEngine.Player == CellColor.Yellow)
+                    else if(gameEngine.Player == CellColor.Yellow)
                     {
-                        if (gameEngine.Play(randomAI.SelectMove(board.Grid)))
-                        {
-                            updateQ(board.Grid, action, -1);
-                            move.MoveResult = Reward.Loss;
+                        
+                            if (gameEngine.Play(randomAI.SelectMove(gameEngine.Board.Grid)))
+                            {
+                                updateQ(gameEngine.Board.Grid, action, -1);
+                                move.MoveResult = Reward.Loss;
                            
-                            loss++;
-                        }
+                                loss++;
+                            }
 
                     }
 

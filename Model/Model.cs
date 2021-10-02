@@ -68,32 +68,7 @@ namespace BlazorConnect4.Model
             return hash.ToString();
         }
 
-        public GameBoard Copy()
-        {
-            GameBoard copy = new GameBoard();
-
-            for (int i = 0; i <= 6; i++)
-            {
-                for (int j = 0; j <= 5; j++)
-                {
-                    switch (this.Grid[i, j].Color) //To avoid the references with objects.
-                    {
-                        case CellColor.Blank:
-                            copy.Grid[i, j].Color = CellColor.Blank;
-                            break;
-                        case CellColor.Red:
-                            copy.Grid[i, j].Color = CellColor.Red;
-                            break;
-                        case CellColor.Yellow:
-                            copy.Grid[i, j].Color = CellColor.Yellow;
-                            break;
-
-                    }
-                }
-            }
-            return copy;
-
-        }
+        
 
     }
     public class GameEngine
