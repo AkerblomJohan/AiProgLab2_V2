@@ -104,7 +104,7 @@ namespace BlazorConnect4.Model
             {
                 if (File.Exists("Data/Random.bin"))
                 {
-                    ai = RandomAI.ConstructFromFile("Data/Random.bin");
+                    ai = QLearn.FileConstructor("Data/Random.bin");
                 }
                 else
                 {
@@ -119,7 +119,8 @@ namespace BlazorConnect4.Model
             }
             else if (playAgainst == "Q2")
             {
-                ai = QLearn.ConstructFromFile("Data/QLearn.bin");
+                ai = new RandomAI();
+               
             }
             else if (playAgainst == "Q3")
             {
@@ -129,10 +130,6 @@ namespace BlazorConnect4.Model
             }
 
         }
-
-
-
-
         public bool IsValid(int col)
         {
             return Board.Grid[col, 0].Color == CellColor.Blank;
@@ -311,8 +308,6 @@ namespace BlazorConnect4.Model
             return true;
         }
 
-
-
         private bool PlayNext()
         {
 
@@ -336,8 +331,7 @@ namespace BlazorConnect4.Model
 
                 return Play(move);
             }
-            
-            
+
             return false;
         }
     }

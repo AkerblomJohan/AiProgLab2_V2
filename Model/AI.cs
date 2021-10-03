@@ -57,7 +57,6 @@ namespace BlazorConnect4.AIModels
         public static RandomAI ConstructFromFile(string fileName)
         {
             RandomAI temp = (RandomAI)(AI.FromFile(fileName));
-            // Eftersom generatorn inte var serialiserad.
             temp.generator = new Random();
             return temp;
         }
@@ -87,9 +86,9 @@ namespace BlazorConnect4.AIModels
 
         private double alpha = 0.5; 
         private double gamma = 0.9; 
-        private double epsion = 0.9;
+        private double epsilon = 0.9;
        
-
+        //Dictionary for qvalues
         public QLearn()
         {
             QDict = new Dictionary<String, double[]>();
@@ -108,6 +107,8 @@ namespace BlazorConnect4.AIModels
             return action;
         }
 
+
+        //Fill values with random numbers if it does not exist yet otherwise gets the qvalues from the dictioniary that is declared.
         public double getQ(Cell[,] grid, int action)
         {
             Random rnd = new Random();
@@ -130,6 +131,7 @@ namespace BlazorConnect4.AIModels
 
         }
 
+        //Updates the qvalues in the qdict otherwise random numbers as was mentioned in the getQ function.
         public void updateQ(Cell[,] grid, int action, double qValue)
         {
             Random rnd = new Random();
@@ -147,19 +149,19 @@ namespace BlazorConnect4.AIModels
             QDict[key][action] = qValue;
         }
 
+
+        //Epsilon greedy action 
         public int greedyAction(Cell[,] grid)
         {
 
             Random rnd = new Random();
             int action = rnd.Next(0, 7);
-            if (rnd.NextDouble() < epsion)
+            if (rnd.NextDouble() < epsilon)
             {
-
                 while (grid[action, 0].Color != CellColor.Blank)
                 {
                     action = rnd.Next(0, 7);
                 }
-
             }
             else
             {
@@ -172,6 +174,8 @@ namespace BlazorConnect4.AIModels
             }
             return action;
         }
+
+        //Best action for the ai
         public int maxMove(Cell[,] grid)
         {
             int action = 0;
@@ -196,20 +200,22 @@ namespace BlazorConnect4.AIModels
             }
             return action;
         }
+
+        //Checks if it is a valid move/action that is being performed
         public bool isValid(Cell[,] grid, int col)
         {
             return grid[col, 0].Color == CellColor.Blank;
             
         }
 
-        public static QLearn ConstructFromFile(string fileName)
+        public static QLearn FileConstructor(string fileName)
         {
             QLearn temp = (QLearn)(AI.FromFile(fileName));
           
             return temp;
         }
 
-        private bool Play(Cell[,] grid, int action)
+        private bool Play(Cell[,] grid, int action)  //Kommentera bort?
         {
             return true;
         }
@@ -237,6 +243,8 @@ namespace BlazorConnect4.AIModels
             }
         }
 
+
+        //Copies the board that is in play so that the ai knows what the best move is in the next action.
         public double qValueNextState(Cell[,] grid, GameEngine engine, CellColor color)
         {
 
@@ -259,11 +267,8 @@ namespace BlazorConnect4.AIModels
                   
                     return getQ(copy, action);
                 }
-               
             }
-
             return getQ(copy, action);
-
         }
 
         public double[,] getBoard(Cell[,] grid)
@@ -298,6 +303,8 @@ namespace BlazorConnect4.AIModels
 
         }
 
+
+        //train the agents
         public void playGames(CellColor colorToTrain)
         {
             var randomAI = new RandomAI();
