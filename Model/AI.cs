@@ -215,7 +215,7 @@ namespace BlazorConnect4.AIModels
             return temp;
         }
 
-        private bool Play(Cell[,] grid, int action)  //Kommentera bort?
+        private bool Play(Cell[,] grid, int action)  //Kommentera bort??
         {
             return true;
         }
