@@ -23,7 +23,7 @@ namespace BlazorConnect4.AIModels
         }
 
         // Funktion för att att läsa från fil.
-        protected static AI FromFile(string fileName)
+        public static AI FromFile(string fileName)
         {
             AI returnAI;
             using (Stream stream = File.Open(fileName, FileMode.Open))
@@ -65,20 +65,13 @@ namespace BlazorConnect4.AIModels
     [Serializable]
     public class QLearn : AI
     {
-        public enum Reward : int
-        {
-            InPlay = 0,
-            Loss = -10,
-            Win = 10,
-            IsValid = -1,
-            Draw = 5
 
-        }
-        public struct Move
-        {
-            public int Index;
-            public Reward MoveResult;
-        }
+        bool InPlay = true;
+        private double Loss = -1;
+        private double Win = 1;
+        private double IsValid = -0.1;
+        private double Draw = 0;
+
 
 
 
@@ -87,12 +80,19 @@ namespace BlazorConnect4.AIModels
         private double alpha = 0.5; 
         private double gamma = 0.9; 
         private double epsilon = 0.9;
-       
+
         //Dictionary for qvalues
         public QLearn()
         {
             QDict = new Dictionary<String, double[]>();
         }
+
+        public QLearn(String fileName)
+        {
+            QLearn ai = FileConstructor(fileName);
+            QDict = ai.QDict;
+        }
+
 
        
         public override int SelectMove(Cell[,] grid)
@@ -195,6 +195,7 @@ namespace BlazorConnect4.AIModels
             bool validMove = isValid(grid, action);
             while(!validMove)
             {
+                updateQ(grid, action, IsValid);  //Update - 0.1 for invalid move
                 action = rnd.Next(0, 7);
                 validMove = isValid(grid, action);
             }
@@ -210,14 +211,8 @@ namespace BlazorConnect4.AIModels
 
         public static QLearn FileConstructor(string fileName)
         {
-            QLearn temp = (QLearn)(AI.FromFile(fileName));
-          
+            QLearn temp = (QLearn)(AI.FromFile(fileName))
             return temp;
-        }
-
-        private bool Play(Cell[,] grid, int action)  //Kommentera bort?
-        {
-            return true;
         }
 
         public bool IsDraw(Cell[,] grid)
@@ -271,83 +266,51 @@ namespace BlazorConnect4.AIModels
             return getQ(copy, action);
         }
 
-        public double[,] getBoard(Cell[,] grid)
-        {
-            double[,] temp = new double[7, 6];
-            for (int i = 0; i < 7; i++)
-            {
-                for (int j = 0; j < 6; j++)
-                {
-                    if (grid[i, j].Color == CellColor.Blank)
-                        temp[i, j] = 0;
-                    if (grid[i, j].Color == CellColor.Red)
-                        temp[i, j] = 1;
-                    if (grid[i, j].Color == CellColor.Yellow)
-                        temp[i, j] = 2;
-
-                }
-                
-            }
-            return temp;
-        }
-        public void printBoard(double[,] grid)
-        {
-            for (int i = 0; i < 7; i++)
-            {
-                for (int j = 0; j < 6; j++)
-                {
-                    Console.Write(grid[i, j]);//.ToString("F3") + " ");
-                }
-                Console.WriteLine();
-            }
-
-        }
-
 
         //train the agents
-        public void playGames(CellColor colorToTrain)
+        public void trainAgents(CellColor colorToTrain)
         {
             var randomAI = new RandomAI();
-            Move move;
- 
             int action= 0;
             int wins = 0;
             int loss = 0;
             int draw = 0;
-            for (int i = 0; i < 500; i++)
+
+            for (int i = 0; i < 5000; i++)
             {
-                move.MoveResult = Reward.InPlay;
+                InPlay = true;
                 
                 GameEngine gameEngine = new GameEngine();
                 Console.WriteLine(i);
                 
                 
-                while (move.MoveResult == Reward.InPlay)
+                while (InPlay)
                 {
                     if (gameEngine.IsDraw())
                     {
-                        
-                        move.MoveResult = Reward.Draw;
+
+                        InPlay = false;
                         draw++;
-                        updateQ(gameEngine.Board.Grid, action, 0.5);
+                        updateQ(gameEngine.Board.Grid, action, Draw); //Get Draw Reward
                         
                     }
+                    
                     else if (gameEngine.Player == colorToTrain)
                     {
-                        
+                        //Q(s,a)
                         double qValue = getQ(gameEngine.Board.Grid, action);
-                       
+                       //Max(Q(s',a'))
                         double qValueNext = qValueNextState(gameEngine.Board.Grid, gameEngine, colorToTrain);
-                       
+                        // Q(a,s)+alpha*(gamma * Max(Q(a',s)) - Q(s,a)
                         updateQ(gameEngine.Board.Grid, action, (qValue + alpha * (gamma * qValueNext - qValue)));
                        
                         action = greedyAction(gameEngine.Board.Grid);
                        
                         if (gameEngine.Play(action))
                         {
-                            updateQ(gameEngine.Board.Grid, action, 1);
-                           
-                            move.MoveResult = Reward.Win;
+                            updateQ(gameEngine.Board.Grid, action, Win); //Get win reward
+
+                            InPlay = false;
 
                             wins++;
 
@@ -359,16 +322,15 @@ namespace BlazorConnect4.AIModels
                         
                         if (gameEngine.Play(randomAI.SelectMove(gameEngine.Board.Grid)))
                             {
-                                updateQ(gameEngine.Board.Grid, action, -1);
-                                move.MoveResult = Reward.Loss;
-                           
+                                updateQ(gameEngine.Board.Grid, action, Loss); //Loss reward
+                                InPlay = false;
+
                                 loss++;
                             }
 
                     }
 
                 }
-               // printBoard(getBoard( gameEngine.Board.Grid));
 
 
             }

@@ -104,7 +104,7 @@ namespace BlazorConnect4.Model
             {
                 if (File.Exists("Data/Random.bin"))
                 {
-                    ai = QLearn.FileConstructor("Data/Random.bin");
+                    ai = RandomAI.ConstructFromFile("Data/Random.bin");
                 }
                 else
                 {
@@ -124,9 +124,10 @@ namespace BlazorConnect4.Model
             }
             else if (playAgainst == "Q3")
             {
-                var x = new QLearn();
-                x.playGames(CellColor.Red);
-                x.ToFile("Data/QLearn.bin"); ;
+              
+                var ai = new QLearn();
+                ai.trainAgents(CellColor.Red);
+                ai.ToFile("Data/QLearn.bin"); 
             }
 
         }
@@ -155,7 +156,7 @@ namespace BlazorConnect4.Model
             int score = 0;
 
 
-                        // Check down
+            // Check down
             if (row < 3)
             {
                 for (int i = row; i <= row + 3; i++)
@@ -252,12 +253,11 @@ namespace BlazorConnect4.Model
                             return true;
                         }
 
-                        /* if (IsDraw())
+                         if (IsDraw())
                          {
                              message = "Draw";
                              active = false;
-                             return true;
-                         }*/
+                         }
                         
                         break;
                     }
