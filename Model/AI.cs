@@ -211,7 +211,7 @@ namespace BlazorConnect4.AIModels
 
         public static QLearn FileConstructor(string fileName)
         {
-            QLearn temp = (QLearn)(AI.FromFile(fileName))
+            QLearn temp = (QLearn)(AI.FromFile(fileName));
             return temp;
         }
 
