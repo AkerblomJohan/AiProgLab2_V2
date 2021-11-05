@@ -119,14 +119,15 @@ namespace BlazorConnect4.Model
             }
             else if (playAgainst == "Q2")
             {
-                ai = new RandomAI();
+                ai = new QLearn("Data/QLearn.bin");
+                
                
             }
             else if (playAgainst == "Q3")
             {
               
                 var ai = new QLearn();
-                ai.trainAgents(CellColor.Red);
+                ai.trainAgents(CellColor.Yellow);
                 ai.ToFile("Data/QLearn.bin"); 
             }
 

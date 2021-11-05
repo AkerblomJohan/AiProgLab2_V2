@@ -156,7 +156,7 @@ namespace BlazorConnect4.AIModels
 
             Random rnd = new Random();
             int action = rnd.Next(0, 7);
-            if (rnd.NextDouble() < epsilon)
+            if (rnd.NextDouble() < (epsilon = epsilon*0.99))
             {
                 while (grid[action, 0].Color != CellColor.Blank)
                 {
@@ -275,15 +275,18 @@ namespace BlazorConnect4.AIModels
             int wins = 0;
             int loss = 0;
             int draw = 0;
+            double qValue = 0;
+            double qValueNext = 0;
+            Cell[,] prevState;
 
             for (int i = 0; i < 5000; i++)
             {
                 InPlay = true;
                 
                 GameEngine gameEngine = new GameEngine();
-                Console.WriteLine(i);
                 
-                
+                prevState = gameEngine.copyBoard(gameEngine.Board.Grid);
+
                 while (InPlay)
                 {
                     if (gameEngine.IsDraw())
@@ -298,14 +301,14 @@ namespace BlazorConnect4.AIModels
                     else if (gameEngine.Player == colorToTrain)
                     {
                         //Q(s,a)
-                        double qValue = getQ(gameEngine.Board.Grid, action);
+                        qValue = getQ(gameEngine.Board.Grid, action);
                        //Max(Q(s',a'))
-                        double qValueNext = qValueNextState(gameEngine.Board.Grid, gameEngine, colorToTrain);
+                        qValueNext = qValueNextState(gameEngine.Board.Grid, gameEngine, colorToTrain);
                         // Q(a,s)+alpha*(gamma * Max(Q(a',s)) - Q(s,a)
-                        updateQ(gameEngine.Board.Grid, action, (qValue + alpha * (gamma * qValueNext - qValue)));
-                       
+
+                        prevState = gameEngine.copyBoard(gameEngine.Board.Grid);
                         action = greedyAction(gameEngine.Board.Grid);
-                       
+                        
                         if (gameEngine.Play(action))
                         {
                             updateQ(gameEngine.Board.Grid, action, Win); //Get win reward
@@ -313,7 +316,7 @@ namespace BlazorConnect4.AIModels
                             InPlay = false;
 
                             wins++;
-
+                            break;
                         }
 
                     }
@@ -326,9 +329,12 @@ namespace BlazorConnect4.AIModels
                                 InPlay = false;
 
                                 loss++;
+                            break;
                             }
 
                     }
+                    // update after each action
+                    updateQ(prevState, action, (qValue + alpha * (gamma * qValueNext - qValue)));
 
                 }
 
