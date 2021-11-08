@@ -127,7 +127,7 @@ namespace BlazorConnect4.Model
             {
               
                 var ai = new QLearn();
-                ai.trainAgents(CellColor.Yellow);
+                ai.trainAgents(CellColor.Red);
                 ai.ToFile("Data/QLearn.bin"); 
             }
 

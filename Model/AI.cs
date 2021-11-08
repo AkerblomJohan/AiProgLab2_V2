@@ -282,7 +282,7 @@ namespace BlazorConnect4.AIModels
             for (int i = 0; i < 5000; i++)
             {
                 InPlay = true;
-                
+                //epsilon = 0.9;
                 GameEngine gameEngine = new GameEngine();
                 
                 prevState = gameEngine.copyBoard(gameEngine.Board.Grid);
@@ -305,7 +305,7 @@ namespace BlazorConnect4.AIModels
                        //Max(Q(s',a'))
                         qValueNext = qValueNextState(gameEngine.Board.Grid, gameEngine, colorToTrain);
                         // Q(a,s)+alpha*(gamma * Max(Q(a',s)) - Q(s,a)
-
+                        updateQ(gameEngine.Board.Grid, action, (qValue + alpha * (gamma * qValueNext - qValue)));
                         prevState = gameEngine.copyBoard(gameEngine.Board.Grid);
                         action = greedyAction(gameEngine.Board.Grid);
                         
@@ -322,7 +322,8 @@ namespace BlazorConnect4.AIModels
                     }
                     else
                     {
-                        
+                        //Updates the prev state here, gives more promesing results than last in func. 
+                        updateQ(prevState, action, (qValue + alpha * (gamma * qValueNext - qValue)));
                         if (gameEngine.Play(randomAI.SelectMove(gameEngine.Board.Grid)))
                             {
                                 updateQ(gameEngine.Board.Grid, action, Loss); //Loss reward
@@ -333,8 +334,7 @@ namespace BlazorConnect4.AIModels
                             }
 
                     }
-                    // update after each action
-                    updateQ(prevState, action, (qValue + alpha * (gamma * qValueNext - qValue)));
+
 
                 }
 
